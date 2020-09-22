@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  canvas {
+    display: block;
+    background-color: black;
+    margin: 30px auto;
+  }
+</style>
+<body>
+  <canvas width="500" height="400" id="canvas"></canvas>
+  <!-- 顶点取色器源码 -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    //attribute声明vec4类型变量apos
+    attribute vec4 apos;
+    // attribute声明顶点颜色变量
+    attribute vec4 a_color;
+    //varying声明顶点颜色插值后变量
+    varying vec4 v_color;
+    void main() {
+      // 顶点坐标apos赋值给内置变量gl_Position
+      gl_Position = apos;
+      //顶点颜色插值计算
+      v_color = a_color;
+    }
+  </script>
+  <!-- 片元着色器源码 -->
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    // 所有float类型数据的精度是lowp
+    precision lowp float;
+    // 接收顶点着色器中v_color数据
+    varying vec4 v_color;
+    void main() {
+      // 逐片元处理数据，所有片元(像素)设置为红色
+      gl_FragColor = v_color;
+    }
+  </script>
+  <script>
+    const canvas = document.querySelector('#canvas')
+    const gl = canvas.getContext('webgl')
+    const vertexShaderSource = document.getElementById('vertexShader').innerText
+    const fragShaderSource = document.getElementById('fragmentShader').innerText
+
+    // 初始化着色器
+    const program = initShader(gl, vertexShaderSource, fragShaderSource)
+    //获取顶点着色器的位置变量apos，即aposLocation指向apos变量。
+    const aposLocation = gl.getAttribLocation(program,'apos')
+    const aColor = gl.getAttribLocation(program, 'a_color')
+    //创建缓冲区对象
+    const buffer = gl.createBuffer();
+    //绑定缓冲区对象,激活buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    //类型数组构造函数Float32Array创建顶点数组
+    // const data =new Float32Array([
+    //     0.0, 0.0, 1.0,//三角形顶点1坐标
+    //     0.0, 1.0, 0.0,//三角形顶点2坐标
+    //     1.0, 0.0, 0.0//三角形顶点3坐标
+    // ])
+    /**
+     创建顶点位置数据数组data，存储两个顶点(-0.5,0.5、(0.5,0.5)
+      存储两个顶点对应RGB颜色值(0,0,1)、(1,0,0)
+    **/
+    // 把顶点位置数据、顶点颜色数据存储在同一个数组中，然后存入一个缓冲区中。在数组中的顶点颜色、位置坐标数据要交叉排列
+    const data = new Float32Array([
+        -0.5,0.5,
+        0,0,1,
+        0.5,0.5,
+        1,0,0
+    ]);
+    const colors = new Float32Array([0,0,1,0,1,0,1,0,0])
+    //顶点数组data数据传入缓冲区
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    //缓冲区中的数据按照一定的规律传递给位置变量apos
+    //4表示data数组一个元素占据的字节数
+    //倒数第二个参数4*5表示每5个元素是一个选择单元
+    //第2个参数2表示从5元素组成的一个选择单元中选择前2个作为顶点位置数据
+    gl.vertexAttribPointer(aposLocation, 2, gl.FLOAT, false, 4*5, 0);
+    //最后一个参数4*2表示5元素组成的一个选择单元中偏移2个元素
+    //第2个参数3表示从5元素组成的一个选择单元中选择后三个作为顶点颜色数据
+    gl.vertexAttribPointer(aColor,3,gl.FLOAT,false, 4*5, 4*2);
+    gl.enableVertexAttribArray(aColor);
+    //允许数据传递
+    gl.enableVertexAttribArray(aposLocation);
+    //开始绘制，显示器显示结果
+    gl.drawArrays(gl.LINES, 0, 2);
+    //声明初始化着色器函数
+    function initShader(gl, vertexShaderSource, fragmentShaderSource) {
+      //创建顶点着色器对象
+      var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      //创建片元着色器对象
+      var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      //引入顶点、片元着色器源代码
+      gl.shaderSource(vertexShader, vertexShaderSource);
+      gl.shaderSource(fragmentShader, fragmentShaderSource);
+      //编译顶点、片元着色器
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      //创建程序对象program
+      var program = gl.createProgram();
+      //附着顶点着色器和片元着色器到program
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      //链接program
+      gl.linkProgram(program);
+      //使用program
+      gl.useProgram(program);
+      //返回程序program对象
+      return program;
+    }
+  </script>
+</body>
+
+</html>
