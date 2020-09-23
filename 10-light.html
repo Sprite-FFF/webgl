@@ -22,6 +22,7 @@
     attribute vec4 a_normal; //顶点法向量变量
     uniform vec3 u_lightColor; // uniform声明平行光颜色变量
     uniform vec3 u_lightPosition; // uniform声明平行光位置变量
+    uniform vec3 u_lightDirection; // uniform声明平行光位置变量
     varying vec4 v_color; //varying声明顶点颜色插值后变量
     void main() {
       //设置几何体轴旋转角度为30度，并把角度值转化为弧度值
@@ -47,7 +48,8 @@
       // 顶点法向量进行矩阵变换，然后归一化
       vec3 normal = normalize((mx*my*a_normal).xyz);
       // 计算点光源照射顶点的方向并归一化
-      vec3 lightDirection = normalize(vec3(gl_Position) - u_lightPosition);
+      // vec3 lightDirection = normalize(vec3(gl_Position) - u_lightPosition);
+      vec3 lightDirection = normalize(u_lightDirection);
       // 计算平行光方向向量和顶点法向量的点积
       float dot = max(dot(lightDirection, normal), 0.0);
       // 计算反射后的颜色
@@ -86,16 +88,16 @@
     // var a_color = gl.getAttribLocation(program,'a_color');
     var a_normal = gl.getAttribLocation(program,'a_normal');
     var u_lightColor = gl.getUniformLocation(program,'u_lightColor');
-    var u_lightPosition = gl.getUniformLocation(program,'u_lightPosition');
-    // var u_LightDirection = gl.getUniformLocation(program, "u_LightDirection" )
+    // var u_lightPosition = gl.getUniformLocation(program,'u_lightPosition');
+    var u_lightDirection = gl.getUniformLocation(program, "u_lightDirection" )
     /**
      * 给平行光传入颜色和方向数据，RGB(1,1,1),单位向量(x,y,z)
      **/
     gl.uniform3f(u_lightColor, 1.0, 1.0, 1.0);
-    //保证向量(x,y,-z)的长度为1，即单位向量
+    // 保证向量(x,y,-z)的长度为1，即单位向量
     // 如果不是单位向量，也可以再来着色器代码中进行归一化
     var x = 1/Math.sqrt(15), y = 2/Math.sqrt(15), z = 3/Math.sqrt(15);
-    gl.uniform3f(u_lightPosition,x,y,-z);
+    gl.uniform3f(u_lightDirection,x,y,-z);
     //创建缓冲区对象
     const buffer = gl.createBuffer();
     //绑定缓冲区对象,激活buffer
